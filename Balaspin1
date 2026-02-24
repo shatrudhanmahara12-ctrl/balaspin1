@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BalaSpin - Pro</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    
+    <script src="https://pl28758698.effectivegatecpm.com/e7/5a/67/e75a67de26ae3ad0cecf91c8304ebe0f.js"></script>
+
+    <style>
+        :root { --primary: #ff4757; --bg: #0f0c29; --card: #1b1b3a; }
+        body { background: var(--bg); color: white; font-family: sans-serif; text-align: center; margin: 0; overflow-x: hidden; }
+        .page { display: none; padding: 15px; min-height: 100vh; }
+        .active { display: block; }
+        
+        /* Nav Menu */
+        .navbar { display: flex; justify-content: space-between; background: var(--card); padding: 10px 20px; position: sticky; top: 0; z-index: 100; }
+        .nav-btn { background: none; border: 1px solid white; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+
+        /* Inputs & Buttons */
+        input { width: 85%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; outline: none; background: #eee; color: #000; }
+        .btn { background: var(--primary); color: white; border: none; padding: 15px; width: 85%; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        
+        /* Wheel */
+        #wheel { width: 280px; height: 280px; border-radius: 50%; border: 10px solid gold; margin: 20px auto; transition: 4s cubic-bezier(0.1, 0, 0.2, 1);
+            background: conic-gradient(#ff4757 0deg 60deg, #333 60deg 120deg, #f1c40f 120deg 180deg, #2ed573 180deg 240deg, #1e90ff 240deg 300deg, #8e44ad 300deg 360deg); }
+
+        .status-box { background: var(--card); padding: 15px; border-radius: 15px; margin: 10px; display: flex; justify-content: space-around; }
+        .admin-card { background: #24244a; padding: 15px; margin: 10px; border-radius: 8px; text-align: left; font-size: 14px; line-height: 1.6; border-left: 4px solid var(--primary); }
+        .blocked { opacity: 0.5; pointer-events: none; }
+        .pw-section { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-top: 10px; }
+        .ad-slot { margin: 10px auto; min-height: 50px; }
+    </style>
+</head>
+<body>
+
+    <div class="ad-slot">
+        <script type="text/javascript">
+            atOptions = { 'key' : '6eede0c59a7ac90fa38d5f0548f0e6a8', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };
+        </script>
+        <script type="text/javascript" src="https://www.highperformanceformat.com/6eede0c59a7ac90fa38d5f0548f0e6a8/invoke.js"></script>
+    </div>
+
+    <div id="login-page" class="page active">
+        <h1 style="margin-top:80px; color:var(--primary)">BalaSpin</h1>
+        <input type="email" id="email" placeholder="Email Address">
+        <input type="password" id="pass" placeholder="Password">
+        <button class="btn" onclick="app.login()">Login / Register</button>
+    </div>
+
+    <div id="user-page" class="page">
+        <div class="navbar">
+            <button class="nav-btn" onclick="app.switchPage('profile-page')">👤 Profile</button>
+            <button class="nav-btn" onclick="app.switchPage('withdraw-page')">💰 Withdraw</button>
+        </div>
+        
+        <div class="status-box">
+            <div>Coins: <b id="u-coins" style="color:gold">0</b></div>
+            <div>Spins: <b id="u-spins">0</b></div>
+        </div>
+
+        <div id="wheel"></div>
+        <button id="spin-btn" class="btn" onclick="app.spin()">SPIN NOW</button>
+        <p id="msg"></p>
+
+        <div style="margin-top:20px; background:#00d2ff; padding:15px; border-radius:10px; color:black; cursor:pointer;" onclick="app.openAd()">
+            <b>🎁 Click for Bonus Coins!</b>
+        </div>
+    </div>
+
+    <div id="profile-page" class="page">
+        <h2>My Profile</h2>
+        <div class="status-box" style="flex-direction:column; gap:10px;">
+            <p>Email: <b id="p-email"></b></p>
+            <p>Coins: <b id="p-coins"></b></p>
+        </div>
+
+        <div class="pw-section">
+            <h3>Change Password</h3>
+            <input type="password" id="old-pw" placeholder="Old Password">
+            <input type="password" id="new-pw" placeholder="New Password">
+            <button class="btn" style="background:green" onclick="app.userChangePw()">Update Password</button>
+        </div>
+
+        <button class="btn" onclick="app.switchPage('user-page')">Back to Game</button>
+        <button class="btn" style="background:#444" onclick="location.reload()">Logout</button>
+    </div>
+
+    <div id="withdraw-page" class="page">
+        <h2>eSewa Withdraw</h2>
+        <p>Minimum: 5000 Coins</p>
+        <input type="number" id="w-amount" placeholder="Coins to Withdraw">
+        <input type="text" id="w-phone" placeholder="eSewa Number">
+        <button class="btn" onclick="app.requestWithdraw()">Submit Request</button>
+        <button class="btn" style="background:#444" onclick="app.switchPage('user-page')">Back</button>
+    </div>
+
+    <div id="admin-page" class="page">
+        <h1 style="color:cyan">🛡️ Admin Control</h1>
+        <div id="admin-tabs" style="margin-bottom:20px;">
+            <button class="nav-btn" onclick="app.loadUsers()">Users</button> | 
+            <button class="nav-btn" onclick="app.loadWithdraws()">Withdraw Requests</button>
+        </div>
+        <div id="admin-content"></div>
+        <button class="btn" style="background:#444" onclick="location.reload()">Exit Admin</button>
+    </div>
+
+    <div class="ad-slot">
+        <script type="text/javascript">
+            atOptions = { 'key' : '6eede0c59a7ac90fa38d5f0548f0e6a8', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };
+        </script>
+        <script type="text/javascript" src="https://www.highperformanceformat.com/6eede0c59a7ac90fa38d5f0548f0e6a8/invoke.js"></script>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAsQ_ctlhiCihq3Qcs6sWbPr6Qd3hf04tI",
+            authDomain: "balaspin-d3ed1.firebaseapp.com",
+            projectId: "balaspin-d3ed1",
+            storageBucket: "balaspin-d3ed1.firebasestorage.app",
+            messagingSenderId: "631497190212",
+            appId: "1:631497190212:web:84d8af9d17a1ca29860511"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const app = {
+            user: null, data: null,
+            
+            async login() {
+                const e = document.getElementById('email').value;
+                const p = document.getElementById('pass').value;
+                if(e === "mmm" && p === "mmm") return this.showAdmin();
+                
+                try {
+                    let res = await auth.signInWithEmailAndPassword(e, p);
+                    this.loadData(res.user.uid);
+                } catch {
+                    try {
+                        let res = await auth.createUserWithEmailAndPassword(e, p);
+                        await db.collection('users').doc(res.user.uid).set({
+                            email: e, pass: p, coins: 0, spins: 100, status: 'active'
+                        });
+                        this.loadData(res.user.uid);
+                    } catch(err) { alert(err.message); }
+                }
+            },
+
+            async loadData(uid) {
+                const doc = await db.collection('users').doc(uid).get();
+                this.data = doc.data();
+                if(this.data.status === 'blocked') return alert("Your account is blocked!");
+                this.user = uid;
+                this.updateUI();
+                this.switchPage('user-page');
+            },
+
+            spin() {
+                if(this.data.spins <= 0) return alert("No spins left!");
+                document.getElementById('spin-btn').disabled = true;
+                this.data.spins--;
+                const deg = Math.floor(Math.random() * 360) + 3600;
+                document.getElementById('wheel').style.transform = `rotate(${deg}deg)`;
+                
+                setTimeout(async () => {
+                    // Coin List: 0, 2, 4, 6, 8, 10
+                    const prizes = [0, 2, 4, 6, 8, 10];
+                    const win = prizes[Math.floor(Math.random() * prizes.length)];
+                    this.data.coins += win;
+                    document.getElementById('msg').innerText = win === 0 ? "Oh no! Bomber (0 Coin)" : "You won " + win + " Coins!";
+                    await db.collection('users').doc(this.user).update({coins: this.data.coins, spins: this.data.spins});
+                    this.updateUI();
+                    document.getElementById('spin-btn').disabled = false;
+                }, 4000);
+            },
+
+            async userChangePw() {
+                const oldP = document.getElementById('old-pw').value;
+                const newP = document.getElementById('new-pw').value;
+                if(oldP !== this.data.pass) return alert("Old password incorrect!");
+                if(newP.length < 6) return alert("New password must be 6+ chars!");
+
+                try {
+                    await auth.currentUser.updatePassword(newP);
+                    await db.collection('users').doc(this.user).update({pass: newP});
+                    alert("Password updated successfully!");
+                    location.reload();
+                } catch(e) { alert(e.message); }
+            },
+
+            async requestWithdraw() {
+                const amt = parseInt(document.getElementById('w-amount').value);
+                const ph = document.getElementById('w-phone').value;
+                if(amt < 5000 || this.data.coins < amt) return alert("Invalid amount or insufficient coins!");
+                
+                await db.collection('withdraws').add({
+                    email: this.data.email, amount: amt, phone: ph, status: 'pending', date: new Date().toLocaleDateString()
+                });
+                this.data.coins -= amt;
+                await db.collection('users').doc(this.user).update({coins: this.data.coins});
+                alert("Withdraw Request Sent!");
+                this.updateUI();
+                this.switchPage('user-page');
+            },
+
+            async showAdmin() {
+                this.switchPage('admin-page');
+                this.loadUsers();
+            },
+
+            async loadUsers() {
+                const cont = document.getElementById('admin-content');
+                cont.innerHTML = "Loading Users...";
+                const snap = await db.collection('users').get();
+                cont.innerHTML = "";
+                snap.forEach(doc => {
+                    const u = doc.data();
+                    cont.innerHTML += `
+                        <div class="admin-card">
+                            <b>Email:</b> ${u.email}<br>
+                            <b>Password:</b> <span style="color:yellow">${u.pass}</span><br>
+                            <b>Coins:</b> ${u.coins} | <b>Status:</b> ${u.status}<br>
+                            <div style="margin-top:10px;">
+                                <input type="text" id="apw-${doc.id}" placeholder="New Password" style="width:60%; padding:5px; color:#000;">
+                                <button onclick="app.adminChangePw('${doc.id}')">Change PW</button>
+                            </div>
+                            <button onclick="app.blockUser('${doc.id}', '${u.status}')" style="margin-top:5px;">Block/Unblock</button>
+                            <button onclick="app.deleteUser('${doc.id}')" style="color:red">Delete</button>
+                        </div>`;
+                });
+            },
+
+            async adminChangePw(uid) {
+                const newP = document.getElementById('apw-'+uid).value;
+                if(newP.length < 6) return alert("Min 6 characters!");
+                await db.collection('users').doc(uid).update({pass: newP});
+                alert("User password updated in database!");
+                this.loadUsers();
+            },
+
+            async loadWithdraws() {
+                const cont = document.getElementById('admin-content');
+                const snap = await db.collection('withdraws').where('status','==','pending').get();
+                cont.innerHTML = "<h3>Pending Withdraws</h3>";
+                snap.forEach(doc => {
+                    const w = doc.data();
+                    cont.innerHTML += `
+                        <div class="admin-card">
+                            User: ${w.email} | Amount: ${w.amount} <br>
+                            eSewa: ${w.phone} <br>
+                            <button onclick="app.approveWithdraw('${doc.id}')">Approve (Paid)</button>
+                        </div>`;
+                });
+            },
+
+            async blockUser(id, s) {
+                await db.collection('users').doc(id).update({status: s === 'active' ? 'blocked' : 'active'});
+                this.loadUsers();
+            },
+
+            async deleteUser(id) {
+                if(confirm("Delete this user?")) {
+                    await db.collection('users').doc(id).delete();
+                    this.loadUsers();
+                }
+            },
+
+            async approveWithdraw(id) {
+                await db.collection('withdraws').doc(id).update({status: 'approved'});
+                alert("Marked as Paid!");
+                this.loadWithdraws();
+            },
+
+            updateUI() {
+                document.getElementById('u-coins').innerText = this.data.coins;
+                document.getElementById('u-spins').innerText = this.data.spins;
+                document.getElementById('p-email').innerText = this.data.email;
+                document.getElementById('p-coins').innerText = this.data.coins;
+            },
+
+            switchPage(id) {
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+            },
+            
+            openAd() { window.open('https://pl28758698.effectivegatecpm.com/e7/5a/67/e75a67de26ae3ad0cecf91c8304ebe0f.js', '_blank'); }
+        };
+    </script>
+</body>
+</html>
